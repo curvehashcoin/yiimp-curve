@@ -261,10 +261,19 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 		for (int i=0; i<json_rules->u.array.length; i++) {
 			json_value *val = json_rules->u.array.values[i];
 			if(!strcmp(val->u.string.ptr, "segwit")) {
-				coind->usesegwit = true;
-				debuglog("%s segwit is supported\n", coind->symbol);
+				//coind->usesegwit = true;
+				debuglog("%s segwit is supported, but disabled\n", coind->symbol);
 				break;
 			}
+		}
+	}
+
+	coind->witness[0] = '\0';
+	if(coind->usesegwit) {
+		const char *witness = json_get_string(json_result, "default_witness_commitment");
+		if (witness) {
+			int len = strlen(witness);
+			snprintf(coind->witness, sizeof(coind->witness)-1, "%016lx%02x%s", 0UL, len, witness);
 		}
 	}
 
