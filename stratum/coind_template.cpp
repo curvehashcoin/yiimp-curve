@@ -233,8 +233,9 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 	if(coind->usememorypool)
 		return coind_create_template_memorypool(coind);
 
-	char params[4*1024] = "[{}]";
+	char params[512] = "[{}]";
 	if(!strcmp(coind->symbol, "PPC")) strcpy(params, "[]");
+	else if(coind->usesegwit) strcpy(params, "[{\"rules\":[\"segwit\"]}]");
 
 	json_value *json = rpc_call(&coind->rpc, "getblocktemplate", params);
 	if(!json || json_is_null(json))
@@ -253,6 +254,18 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 		coind_error(coind, "getblocktemplate result");
 		json_value_free(json);
 		return NULL;
+	}
+
+	json_value *json_rules = json_get_array(json_result, "rules");
+	if(json_rules && !coind->usesegwit && json_rules->u.array.length) {
+		for (int i=0; i<json_rules->u.array.length; i++) {
+			json_value *val = json_rules->u.array.values[i];
+			if(!strcmp(val->u.string.ptr, "segwit")) {
+				coind->usesegwit = true;
+				debuglog("%s segwit is supported\n", coind->symbol);
+				break;
+			}
+		}
 	}
 
 	json_value *json_tx = json_get_array(json_result, "transactions");
@@ -360,13 +373,16 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 	for(int i = 0; i < json_tx->u.array.length; i++)
 	{
 		const char *p = json_get_string(json_tx->u.array.values[i], "hash");
-
-		char hash_be[1024];
-		memset(hash_be, 0, 1024);
-		string_be(p, hash_be);
-
-		txhashes.push_back(hash_be);
-
+		const char *txid = json_get_string(json_tx->u.array.values[i], "txid");
+		if(coind->usesegwit && txid && strlen(txid)) {
+			char txid_be[256] = { 0 };
+			string_be(txid, txid_be);
+			txhashes.push_back(txid_be);
+		} else {
+			char hash_be[256] = { 0 };
+			string_be(p, hash_be);
+			txhashes.push_back(hash_be);
+		}
 		const char *d = json_get_string(json_tx->u.array.values[i], "data");
 		templ->txdata.push_back(d);
 	}

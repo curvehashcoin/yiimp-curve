@@ -67,6 +67,7 @@ public:
 	bool hasmasternodes;
 	bool noblocknotify;
 	bool multialgos; // pow_hash field (or mined_hash)
+	bool usesegwit;
 
 	YAAMP_JOB *job;
 //	YAAMP_JOB_TEMPLATE *templ;
