@@ -9,7 +9,7 @@ public:
 
 	bool valid;
 	bool extranonce1;
-	int error_number;
+	int32_t error_number;
 
 	uint32_t ntime;
 	double difficulty;
@@ -56,8 +56,9 @@ void share_prune(YAAMP_DB *db);
 class YAAMP_BLOCK: public YAAMP_OBJECT
 {
 public:
-	int created;
+	time_t created;
 	bool confirmed;
+	bool segwit;
 
 	int userid;
 	int workerid;
@@ -83,7 +84,7 @@ inline void block_delete(YAAMP_OBJECT *object)
 class YAAMP_SUBMIT: public YAAMP_OBJECT
 {
 public:
-	int created;
+	time_t created;
 	bool valid;
 
 	int remoteid;
@@ -98,7 +99,7 @@ inline void submit_delete(YAAMP_OBJECT *object)
 
 void block_prune(YAAMP_DB *db);
 
-void block_add(int userid, int workerid, int coinid, int height, double difficulty, double difficulty_user, const char *hash1, const char *hash2);
+void block_add(int userid, int workerid, int coinid, int height, double diff, double diff_user, const char *hash1, const char *h2, int segwit);
 void block_confirm(int coinid, const char *hash);
 
 YAAMP_SUBMIT *submit_add(int remoteid, double difficulty);

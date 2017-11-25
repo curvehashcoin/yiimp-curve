@@ -258,7 +258,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 
 	// segwit rule
 	json_value *json_rules = json_get_array(json_result, "rules");
-	if(json_rules && !coind->usesegwit && json_rules->u.array.length) {
+	if(json_rules && !strlen(coind->witness_magic) && json_rules->u.array.length) {
 		for (int i=0; i<json_rules->u.array.length; i++) {
 			json_value *val = json_rules->u.array.values[i];
 			if(!strcmp(val->u.string.ptr, "segwit")) {
@@ -268,7 +268,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 					strncpy(coind->witness_magic, &commitment[4], 8);
 					coind->witness_magic[8] = '\0';
 				}
-				coind->usesegwit = g_stratum_segwit;
+				coind->usesegwit |= g_stratum_segwit;
 				if (coind->usesegwit)
 					debuglog("%s segwit enabled, magic %s\n", coind->symbol, coind->witness_magic);
 				break;
