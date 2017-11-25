@@ -66,6 +66,8 @@ void coinbase_create(YAAMP_COIND *coind, YAAMP_JOB_TEMPLATE *templ, json_value *
 {
 	char eheight[32], etime[32];
 	char entime[32] = { 0 };
+	char txcount_hex[16] = { 0 };
+	int txcount = 0;
 
 	ser_number(templ->height, eheight);
 	ser_number(time(NULL), etime);
@@ -404,14 +406,26 @@ void coinbase_create(YAAMP_COIND *coind, YAAMP_JOB_TEMPLATE *templ, json_value *
 			strcat(templ->coinb2, "01");
 	}
 
-	else
-		strcat(templ->coinb2, "01");
+	else if (templ->has_segwit_txs) {
+		char commitment[128] = { 0 };
+		txcount = txcount + 2;
+		sprintf(txcount_hex, "%02x", txcount);
+		strcat(templ->coinb2, txcount_hex);
+		sprintf(commitment, "0000000000000000%02x%s", (int) (strlen(coind->commitment)/2), coind->commitment);
+		strcat(templ->coinb2, commitment);
+	} else {
+		// strcat(templ->coinb2, "01");
+		txcount = txcount + 1;
+		sprintf(txcount_hex, "%02x", txcount);
+		strcat(templ->coinb2, txcount_hex);
+	}
 
 	job_pack_tx(coind, templ->coinb2, available, NULL);
-	strcat(templ->coinb2, "00000000"); // locktime
 
 	//if(coind->txmessage)
 	//	strcat(templ->coinb2, "00");
+
+	strcat(templ->coinb2, "00000000"); // locktime
 
 	coind->reward = (double)available/100000000*coind->reward_mul;
 //	debuglog("coinbase %f\n", coind->reward);

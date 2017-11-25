@@ -235,7 +235,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 
 	char params[512] = "[{}]";
 	if(!strcmp(coind->symbol, "PPC")) strcpy(params, "[]");
-	else if(coind->usesegwit) strcpy(params, "[{\"rules\":[\"segwit\"]}]");
+	else if(g_stratum_segwit) strcpy(params, "[{\"rules\":[\"segwit\"]}]");
 
 	json_value *json = rpc_call(&coind->rpc, "getblocktemplate", params);
 	if(!json || json_is_null(json))
@@ -256,24 +256,23 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 		return NULL;
 	}
 
+	// segwit rule
 	json_value *json_rules = json_get_array(json_result, "rules");
 	if(json_rules && !coind->usesegwit && json_rules->u.array.length) {
 		for (int i=0; i<json_rules->u.array.length; i++) {
 			json_value *val = json_rules->u.array.values[i];
 			if(!strcmp(val->u.string.ptr, "segwit")) {
-				//coind->usesegwit = true;
-				debuglog("%s segwit is supported, but disabled\n", coind->symbol);
+				const char *commitment = json_get_string(json_result, "default_witness_commitment");
+				strcpy(coind->witness_magic, "aa21a9ed");
+				if (commitment && strlen(commitment) > 12) {
+					strncpy(coind->witness_magic, &commitment[4], 8);
+					coind->witness_magic[8] = '\0';
+				}
+				coind->usesegwit = g_stratum_segwit;
+				if (coind->usesegwit)
+					debuglog("%s segwit enabled, magic %s\n", coind->symbol, coind->witness_magic);
 				break;
 			}
-		}
-	}
-
-	coind->witness[0] = '\0';
-	if(coind->usesegwit) {
-		const char *witness = json_get_string(json_result, "default_witness_commitment");
-		if (witness) {
-			int len = strlen(witness);
-			snprintf(coind->witness, sizeof(coind->witness)-1, "%016lx%02x%s", 0UL, len, witness);
 		}
 	}
 
@@ -377,29 +376,77 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 	//////////////////////////////////////////////////////////////////////////////////////////
 
 	vector<string> txhashes;
+	vector<string> txids;
 	txhashes.push_back("");
+	txids.push_back("");
 
+	templ->has_segwit_txs = false;
+	// to force/test
+	// templ->has_segwit_txs = coind->usesegwit = (coind->usesegwit || g_stratum_segwit);
 	for(int i = 0; i < json_tx->u.array.length; i++)
 	{
 		const char *p = json_get_string(json_tx->u.array.values[i], "hash");
+		char hash_be[256] = { 0 };
+		string_be(p, hash_be);
+		txhashes.push_back(hash_be);
+
 		const char *txid = json_get_string(json_tx->u.array.values[i], "txid");
-		if(coind->usesegwit && txid && strlen(txid)) {
+		if(txid && strlen(txid)) {
 			char txid_be[256] = { 0 };
 			string_be(txid, txid_be);
-			txhashes.push_back(txid_be);
+			txids.push_back(txid_be);
+			if (strcmp(hash_be, txid_be)) {
+				stratumlog("%s segwit tx found, height %d\n", coind->symbol, templ->height);
+				templ->has_segwit_txs = true; // if not, its useless to generate a segwit block, bigger
+			}
 		} else {
-			char hash_be[256] = { 0 };
-			string_be(p, hash_be);
-			txhashes.push_back(hash_be);
+			templ->has_segwit_txs = false; // force disable if not supported (no txid fields)
 		}
+
 		const char *d = json_get_string(json_tx->u.array.values[i], "data");
 		templ->txdata.push_back(d);
 	}
 
-	templ->txmerkles[0] = 0;
-	templ->txcount = txhashes.size();
-	templ->txsteps = merkle_steps(txhashes);
+	templ->txmerkles[0] = '\0';
+	if(templ->has_segwit_txs) {
+		templ->txcount = txids.size();
+		templ->txsteps = merkle_steps(txids);
+	} else {
+		templ->txcount = txhashes.size();
+		templ->txsteps = merkle_steps(txhashes);
+	}
+
+	if(templ->has_segwit_txs) {
+		// this merkle computation should be double checked with real witness txs (txid != txhash)
+		// * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
+		//   coinbase (where 0x0000....0000 is used instead).
+		// * The coinbase scriptWitness is a stack of a single 32-byte vector, containing a witness nonce (unconstrained).
+		// * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
+		// * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes (magic) of which are
+		//   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
+		char bin[YAAMP_HASHLEN_BIN*2];
+		vector<string> mt_verify = merkle_steps(txhashes);
+		string witness_mt = merkle_with_first(mt_verify, "0000000000000000000000000000000000000000000000000000000000000000");
+		mt_verify.clear();
+		witness_mt = witness_mt + "0000000000000000000000000000000000000000000000000000000000000000";
+
+		binlify((unsigned char *)bin, witness_mt.c_str());
+		sha256_double_hash_hex(bin, coind->witness, YAAMP_HASHLEN_BIN*2);
+
+		int clen = (int) (strlen(coind->witness_magic) + strlen(coind->witness)); // 4 + 32 = 36 = 0x24
+		sprintf(coind->commitment, "6a%02x%s%s", clen/2, coind->witness_magic, coind->witness);
+
+		// force default commitment, seems rejected else (tested on BTX)
+		const char *commitment = json_get_string(json_result, "default_witness_commitment");
+		if (commitment) {
+			if (strcmp(coind->commitment, commitment) != 0)
+				debuglog("segwit %s using default %s\n", coind->commitment, commitment);
+			sprintf(coind->commitment, "%s", commitment);
+		}
+	}
+
 	txhashes.clear();
+	txids.clear();
 
 	vector<string>::const_iterator i;
 	for(i = templ->txsteps.begin(); i != templ->txsteps.end(); ++i)

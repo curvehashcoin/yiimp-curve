@@ -50,6 +50,8 @@ struct YAAMP_JOB_TEMPLATE
 
 	char header[256];
 
+	bool has_segwit_txs;
+
 	int auxs_size;
 	YAAMP_COIND_AUX *auxs[MAX_AUXS];
 };
