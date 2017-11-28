@@ -69,7 +69,6 @@ public:
 	bool multialgos; // pow_hash field (or mined_hash)
 
 	bool usesegwit;
-	char witness[128];
 	char commitment[128];
 	char witness_magic[16];
 

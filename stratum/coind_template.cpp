@@ -396,7 +396,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 			string_be(txid, txid_be);
 			txids.push_back(txid_be);
 			if (strcmp(hash_be, txid_be)) {
-				stratumlog("%s segwit tx found, height %d\n", coind->symbol, templ->height);
+				//debuglog("%s segwit tx found, height %d\n", coind->symbol, templ->height);
 				templ->has_segwit_txs = true; // if not, its useless to generate a segwit block, bigger
 			}
 		} else {
@@ -417,31 +417,32 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 	}
 
 	if(templ->has_segwit_txs) {
-		// this merkle computation should be double checked with real witness txs (txid != txhash)
 		// * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
 		//   coinbase (where 0x0000....0000 is used instead).
 		// * The coinbase scriptWitness is a stack of a single 32-byte vector, containing a witness nonce (unconstrained).
 		// * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
 		// * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes (magic) of which are
 		//   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
+		/*
 		char bin[YAAMP_HASHLEN_BIN*2];
+		char witness[128] = { 0 };
 		vector<string> mt_verify = merkle_steps(txhashes);
 		string witness_mt = merkle_with_first(mt_verify, "0000000000000000000000000000000000000000000000000000000000000000");
 		mt_verify.clear();
 		witness_mt = witness_mt + "0000000000000000000000000000000000000000000000000000000000000000";
 
 		binlify((unsigned char *)bin, witness_mt.c_str());
-		sha256_double_hash_hex(bin, coind->witness, YAAMP_HASHLEN_BIN*2);
+		sha256_double_hash_hex(bin, witness, YAAMP_HASHLEN_BIN*2);
 
-		int clen = (int) (strlen(coind->witness_magic) + strlen(coind->witness)); // 4 + 32 = 36 = 0x24
-		sprintf(coind->commitment, "6a%02x%s%s", clen/2, coind->witness_magic, coind->witness);
-
-		// force default commitment, seems rejected else (tested on BTX)
+		int clen = (int) (strlen(coind->witness_magic) + strlen(witness)); // 4 + 32 = 36 = 0x24
+		sprintf(coind->commitment, "6a%02x%s%s", clen/2, coind->witness_magic, witness);
+		*/
+		// default commitment is already computed correctly
 		const char *commitment = json_get_string(json_result, "default_witness_commitment");
 		if (commitment) {
-			if (strcmp(coind->commitment, commitment) != 0)
-				debuglog("segwit %s using default %s\n", coind->commitment, commitment);
 			sprintf(coind->commitment, "%s", commitment);
+		} else {
+			templ->has_segwit_txs = false;
 		}
 	}
 
