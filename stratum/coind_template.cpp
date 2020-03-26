@@ -448,7 +448,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 	std::cerr << "[1] Txes count: " << templ->txdata.size() << std::endl;
 	
     // for yespowerRES we need to insert coinbasetxn here
-    if (!strcmp(g_stratum_algo, "yespowerRES")) {
+/*    if (!strcmp(g_stratum_algo, "yespowerRES")) {
 
         json_value *json_coinbasetxn = json_get_object(json_result, "coinbasetxn");
         if(!json_coinbasetxn)
@@ -481,27 +481,27 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
         char hash_be[256] = { 0 };
         string_be(p, hash_be);
 
-        /*
-        std::cout << "txhashes.size() = " << txhashes.size() << " - " << (txhashes.size() % 2) << std::endl;
-        std::cerr << "[ Decker ] txhashes[" << txhashes.size() << "] = " << std::endl;
-        for (int i=0; i < txhashes.size(); i++) {
-            std::string hex(txhashes[i]);
-            for (std::string::iterator it=hex.begin(); it != hex.end(); it += 2) std::swap(it[0], it[1]);
-            std::string hex_reversed(hex.rbegin(), hex.rend());
-            std::cerr << "[" << i << "] \"" << txhashes[i] << "\" - " "\"" << hex_reversed << "\""<< std::endl;
-        }
-        */
+        
+      //  std::cout << "txhashes.size() = " << txhashes.size() << " - " << (txhashes.size() % 2) << std::endl;
+      //  std::cerr << "[ Decker ] txhashes[" << txhashes.size() << "] = " << std::endl;
+      //  for (int i=0; i < txhashes.size(); i++) {
+      //      std::string hex(txhashes[i]);
+      //      for (std::string::iterator it=hex.begin(); it != hex.end(); it += 2) std::swap(it[0], it[1]);
+      //      std::string hex_reversed(hex.rbegin(), hex.rend());
+      //      std::cerr << "[" << i << "] \"" << txhashes[i] << "\" - " "\"" << hex_reversed << "\""<< std::endl;
+      //  }
+        
         vector<std::string> txsteps = merkle_steps(txhashes);
-        /*
-        std::cerr << "merkle steps [" << txsteps.size() << "] :" << std::endl;
-        for (int i=0; i<txsteps.size(); i++) {
-            std::string hex(txsteps[i]);
-            for (std::string::iterator it=hex.begin(); it != hex.end(); it += 2) std::swap(it[0], it[1]);
-            std::string hex_reversed(hex.rbegin(), hex.rend());
-            std::cerr << "[" << i << "] \"" << txsteps[i] << "\" - " "\"" << hex_reversed << "\""<< std::endl;
+        
+     //   std::cerr << "merkle steps [" << txsteps.size() << "] :" << std::endl;
+     //   for (int i=0; i<txsteps.size(); i++) {
+     //       std::string hex(txsteps[i]);
+     //       for (std::string::iterator it=hex.begin(); it != hex.end(); it += 2) std::swap(it[0], it[1]);
+     //       std::string hex_reversed(hex.rbegin(), hex.rend());
+     //       std::cerr << "[" << i << "] \"" << txsteps[i] << "\" - " "\"" << hex_reversed << "\""<< std::endl;
             
-        }
-        */
+     //   }
+        
                 if (txsteps.size() > 0) 
         {
             std::string mr = merkle_with_first(txsteps, hash_be);
@@ -517,19 +517,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
             //std::string hex_reversed(hex.rbegin(), hex.rend());
             strcpy(templ->mr_hex,hex.c_str());
         }
-		
-        // standart - merkle_arr = txsteps = templ->txmerkles       - // https://github.com/slushpool/poclbm-zcash/wiki/Stratum-protocol-changes-for-ZCash
-        // equishash&yespowerRES - merkle_arr->merkleroot (including coinbase)  - // https://en.bitcoin.it/wiki/Stratum_mining_protocol#mining.notify
-
-        /*
-        4cdfc3b122d2513988817361c31734e7ebc597f9f78e90294722c97e9a0bece9
-        [1] "a9e27225d809d08f2bd17e03d4e0b8d63c9f1d9da7196585b017cea9586a97b1" b1976a58a9ce17b0856519a79d1d9f3cd6b8e0d4037ed12b8fd009d82572e2a9
-        [2] "03889a9f0e45c74a44f8872c971164582693e76511a37fe8df7d093c4024d3f2" f2d324403c097ddfe87fa31165e79326586411972c87f8444ac7450e9f9a8803
-        [3] "9371d068ace5130e7a8ce8e80c0d9448bb3b97b581c0285ba7d04d27e4660411" 110466e4274dd0a75b28c081b5973bbb48940d0ce8e88c7a0e13e5ac68d07193
-        https://en.bitcoin.it/wiki/Stratum_mining_protocol#mining.notify
-        List of merkle branches. The generation transaction is hashed against the merkle branches to build the final merkle root.
-        */
-    }
+    } */
 
 	if (templ->has_filtered_txs) {
 		// coinbasevalue is a total with all tx fees, need to reduce it if some are skipped
