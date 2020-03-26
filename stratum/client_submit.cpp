@@ -65,11 +65,11 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
     
 
 	// let's assemble coinbase
-	// sprintf(submitvalues->coinbase, "%s%s%s%s", templ->coinb1, nonce1, nonce2, templ->coinb2);
+	//sprintf(submitvalues->coinbase, "%s%s%s%s", templ->coinb1, nonce1, nonce2, templ->coinb2);
     sprintf(submitvalues->coinbase, "%s", templ->coinbase);
 	int coinbase_len = strlen(submitvalues->coinbase);
-	//std::cerr << "coinbase[" << coinbase_len << "] = " << submitvalues->coinbase << std::endl;
-	std::cerr << "[2] Txes count: " << templ->txdata.size() << std::endl;
+	std::cerr << "coinbase[" << coinbase_len << "] = " << submitvalues->coinbase << std::endl;
+	//std::cerr << "[2] Txes count: " << templ->txdata.size() << std::endl;
 
 	unsigned char coinbase_bin[1024];
 	memset(coinbase_bin, 0, 1024);
@@ -85,41 +85,22 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
 	merkle_hash((char *)coinbase_bin, doublehash, coinbase_len/2);
 
 	string merkleroot = merkle_with_first(templ->txsteps, doublehash);
-	//ser_string_be(merkleroot.c_str(), submitvalues->merkleroot_be, 8);
-    strcpy(submitvalues->merkleroot_be, merkleroot.c_str());
+	ser_string_be(merkleroot.c_str(), submitvalues->merkleroot_be, 8);
+    //strcpy(submitvalues->merkleroot_be, merkleroot.c_str());
 	std::cerr << "merkle root: " << merkleroot << std::endl;
 
 #ifdef MERKLE_DEBUGLOG
 	printf("merkle root %s\n", merkleroot.c_str());
 #endif
 
-	// TODO: create a correct equihash blockheader
-	/*
-        var header =  new Buffer(140);
-        var position = 0;
-        header.writeUInt32LE(this.rpcData.version, position += 0, 4, 'hex');
-        header.write(this.prevHashReversed, position += 4, 32, 'hex');
-        header.write(this.merkleRootReversed, position += 32, 32, 'hex');
-        header.write(this.hashReserved, position += 32, 32, 'hex'); 
-        header.write(nTime, position += 32, 4, 'hex');
-        header.write(util.reverseBuffer(new Buffer(rpcData.bits, 'hex')).toString('hex'), position += 4, 4, 'hex');
-        header.write(nonce, position += 4, 32, 'hex');
-		
-		CBlockHeader
-        READWRITE(this->nVersion);
-        READWRITE(hashPrevBlock);
-        READWRITE(hashMerkleRoot);
-        READWRITE(hashFinalSaplingRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
-        READWRITE(nSolution);
-		
-    */
-
+	// TODO: create a correct yespowerRES blockheader
     {
         
-		char rev_version[32] = {0};
+		sprintf(submitvalues->header, "%s%s%s%s%s%s00000000%s", templ->version, templ->prevhash_be, submitvalues->merkleroot_be,
+            templ->extradata_be, ntime, templ->nbits, nonce);
+        ser_string_be(submitvalues->header, submitvalues->header_be, 20);
+
+		/*		char rev_version[32] = {0};
         char rev_ntime[32] = {0};
         char rev_nbits[32] = {0};
         string_be(templ->version,rev_version);
@@ -137,18 +118,13 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
 
         //std::cerr << "submitvalues->header    = " << submitvalues->header << std::endl;
         //std::cerr << "submitvalues->header_be = " << submitvalues->header_be << std::endl;
-
-
-
-        // btc header - 80 
-        // zec/kmd header - 4+32+32+32+4+4+32 = 140 
-        // zec/kmd header + sol - 4+32+32+32+4+4+32 + 1344 + 3 = 1487
-
+*/
+       
 	}
 
 	binlify(submitvalues->header_bin, submitvalues->header_be);
 
-	//std::cerr << "blockheader: " << submitvalues->header_be << std::endl;
+	std::cerr << "blockheader: " << submitvalues->header_be << std::endl;
 	
     //	printf("%s\n", submitvalues->header_be);
 	int header_len = strlen(submitvalues->header)/2;
