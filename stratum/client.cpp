@@ -610,7 +610,7 @@ void *client_thread(void *p)
 		else if(!strcmp(method, "mining.submit")) {
             if (g_current_algo->name && !strcmp(g_current_algo->name,"yespowerRES")) {
                 b = client_submit_res(client, json_params);
-            } else
+            } else 
                 b = client_submit(client, json_params);
         }
 		
