@@ -56,6 +56,6 @@ void yespower_hash(const char *input, char *output, uint32_t len)
 }
 void yespowerRES_hash(const char *input, char *output, uint32_t len)
 {
-	if (yespower_tls(input, 80, &yespower_1_0_RES, (yespower_binary_t *)output))
+	if (yespower_tls(input, len, &yespower_1_0_RES, (yespower_binary_t *)output))
 		abort();
 }
