@@ -448,7 +448,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 	std::cerr << "[1] Txes count: " << templ->txdata.size() << std::endl;
 	
     // for yespowerRES we need to insert coinbasetxn here
-/*    if (!strcmp(g_stratum_algo, "yespowerRES")) {
+    if (!strcmp(g_stratum_algo, "yespowerRES")) {
 
         json_value *json_coinbasetxn = json_get_object(json_result, "coinbasetxn");
         if(!json_coinbasetxn)
@@ -517,7 +517,7 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
             //std::string hex_reversed(hex.rbegin(), hex.rend());
             strcpy(templ->mr_hex,hex.c_str());
         }
-    } */
+    } 
 
 	if (templ->has_filtered_txs) {
 		// coinbasevalue is a total with all tx fees, need to reduce it if some are skipped
