@@ -96,11 +96,11 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
 	// TODO: create a correct yespowerRES blockheader
     {
         
-		sprintf(submitvalues->header, "%s%s%s%s%s%s00000000%s", templ->version, templ->prevhash_be, submitvalues->merkleroot_be,
+	/*	sprintf(submitvalues->header, "%s%s%s%s%s%s00000000%s", templ->version, templ->prevhash_be, submitvalues->merkleroot_be,
             templ->extradata_be, ntime, templ->nbits, nonce);
         ser_string_be(submitvalues->header, submitvalues->header_be, 20);
-
-		/*		char rev_version[32] = {0};
+	*/
+				char rev_version[32] = {0};
         char rev_ntime[32] = {0};
         char rev_nbits[32] = {0};
         string_be(templ->version,rev_version);
@@ -118,7 +118,7 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
 
         //std::cerr << "submitvalues->header    = " << submitvalues->header << std::endl;
         //std::cerr << "submitvalues->header_be = " << submitvalues->header_be << std::endl;
-*/
+
        
 	}
 
