@@ -65,8 +65,8 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
     
 
 	// let's assemble coinbase
-	//sprintf(submitvalues->coinbase, "%s%s%s%s", templ->coinb1, nonce1, nonce2, templ->coinb2);
-    sprintf(submitvalues->coinbase, "%s", templ->coinbase);
+	sprintf(submitvalues->coinbase, "%s%s%s%s", templ->coinb1, nonce1, nonce2, templ->coinb2);
+    //sprintf(submitvalues->coinbase, "%s", templ->coinbase);
 	int coinbase_len = strlen(submitvalues->coinbase);
 	std::cerr << "coinbase[" << coinbase_len << "] = " << submitvalues->coinbase << std::endl;
 	//std::cerr << "[2] Txes count: " << templ->txdata.size() << std::endl;
@@ -100,7 +100,7 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
             templ->extradata_be, ntime, templ->nbits, nonce);
         ser_string_be(submitvalues->header, submitvalues->header_be, 20);
 	*/
-				char rev_version[32] = {0};
+		char rev_version[32] = {0};
         char rev_ntime[32] = {0};
         char rev_nbits[32] = {0};
         string_be(templ->version,rev_version);
