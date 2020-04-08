@@ -55,6 +55,7 @@ void build_submit_values(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE *tem
 void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE *templ,
 	const char *nonce1, const char *nonce2, const char *ntime, const char *nonce )
 {
+/*
     // debug
     std::cerr << "build_submit_values_res" << std::endl;
     std::cerr << "------------------------" << std::endl;
@@ -69,6 +70,11 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
     //sprintf(submitvalues->coinbase, "%s", templ->coinbase);
 	int coinbase_len = strlen(submitvalues->coinbase);
 	std::cerr << "coinbase[" << coinbase_len << "] = " << submitvalues->coinbase << std::endl;
+*/
+    // let's assemble coinbase
+	sprintf(submitvalues->coinbase, "%s%s%s%s", templ->coinb1, nonce1, nonce2, templ->coinb2);
+    // sprintf(submitvalues->coinbase, "%s", templ->coinbase);
+	int coinbase_len = strlen(submitvalues->coinbase);
 	//std::cerr << "[2] Txes count: " << templ->txdata.size() << std::endl;
 
 	unsigned char coinbase_bin[1024];
@@ -87,13 +93,38 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
 	string merkleroot = merkle_with_first(templ->txsteps, doublehash);
 	ser_string_be(merkleroot.c_str(), submitvalues->merkleroot_be, 8);
     //strcpy(submitvalues->merkleroot_be, merkleroot.c_str());
-	std::cerr << "merkle root: " << merkleroot << std::endl;
+
+	//std::cerr << "merkle root: " << merkleroot << std::endl;
+
 
 #ifdef MERKLE_DEBUGLOG
 	printf("merkle root %s\n", merkleroot.c_str());
 #endif
 
+
 	// TODO: create a correct yespowerRES blockheader
+	/*
+        var header =  new Buffer(140);
+        var position = 0;
+        header.writeUInt32LE(this.rpcData.version, position += 0, 4, 'hex');
+        header.write(this.prevHashReversed, position += 4, 32, 'hex');
+        header.write(this.merkleRootReversed, position += 32, 32, 'hex');
+        header.write(this.hashReserved, position += 32, 32, 'hex'); 
+        header.write(nTime, position += 32, 4, 'hex');
+        header.write(util.reverseBuffer(new Buffer(rpcData.bits, 'hex')).toString('hex'), position += 4, 4, 'hex');
+        header.write(nonce, position += 4, 32, 'hex');
+		
+		CBlockHeader
+        READWRITE(this->nVersion);
+        READWRITE(hashPrevBlock);
+        READWRITE(hashMerkleRoot);
+        READWRITE(hashFinalSaplingRoot);
+        READWRITE(nTime);
+        READWRITE(nBits);
+        READWRITE(nNonce);
+        		
+    */
+
     {
         
 	/*	sprintf(submitvalues->header, "%s%s%s%s%s%s00000000%s", templ->version, templ->prevhash_be, submitvalues->merkleroot_be,
@@ -119,7 +150,7 @@ void build_submit_values_res(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE 
         //std::cerr << "submitvalues->header    = " << submitvalues->header << std::endl;
         //std::cerr << "submitvalues->header_be = " << submitvalues->header_be << std::endl;
 
-       
+
 	}
 
 	binlify(submitvalues->header_bin, submitvalues->header_be);
