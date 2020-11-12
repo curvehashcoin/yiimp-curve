@@ -192,6 +192,7 @@ YAAMP_ALGO g_algos[] =
 	{"x11", x11_hash, 1, 0, 0},
 	{"x11evo", x11evo_hash, 1, 0, 0},
 	{"x11k", x11k_hash, 1, 0, 0},
+	{"x11kvs", x11kvs_hash, 0x100, 0, 0, 7},
 	{"x12", x12_hash, 1, 0, 0},
 	{"x13", x13_hash, 1, 0, 0},
 	{"x14", x14_hash, 1, 0, 0},
