@@ -62,6 +62,19 @@ function updateRawcoins()
 		}
 	}
 
+	if (!exchange_get('altilly', 'disabled')) {
+		$list = altilly_api_query('currency');
+		if(is_array($list) && !empty($list)) {
+			dborun("UPDATE markets SET deleted=true WHERE name='altilly'");
+			foreach ($list as $currency) {
+				$symbol = objSafeVal($currency, 'id');
+				$name = objSafeVal($currency, 'fullName');
+				if ($currency->crypto || $currency->delisted) continue;
+				updateRawCoin('altilly', $symbol, $name);
+			}
+		}
+	}
+
 	if (!exchange_get('crex24', 'disabled')) {
 		$list = crex24_api_query('currencies');
 		if(is_array($list) && !empty($list)) {
@@ -415,7 +428,7 @@ function updateRawCoin($marketname, $symbol, $name='unknown')
 		}
 
 		// some other to ignore...
-		if (in_array($marketname, array('crex24','yobit','coinbene','kucoin','deliondex','escodex','tradesatoshi','unnamed')))
+		if (in_array($marketname, array('altilly','crex24','yobit','coinbene','kucoin','deliondex','escodex','tradesatoshi','unnamed')))
 			return;
 
 		if (market_get($marketname, $symbol, "disabled")) {

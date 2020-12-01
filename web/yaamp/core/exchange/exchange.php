@@ -42,6 +42,7 @@ require_once("tradesatoshi.php");
 require_once("swiftex.php");
 require_once("unnamed.php");
 require_once("bibox.php");
+require_once("altilly.php");
 
 
 /* Format an exchange coin Url */
@@ -80,6 +81,8 @@ function getMarketUrl($coin, $marketName)
 
 	if($market == 'alcurex')
 		$url = "https://alcurex.com/#{$symbol}-{$base}";
+	else if($market == 'altilly')
+		$url = "https://altilly.com/market/{$symbol}_{$base}";
 	else if($market == 'bibox')
 		$url = "https://www.bibox.com/exchange?coinPair={$symbol}_{$base}";
 	else if($market == 'binance')

@@ -1238,3 +1238,16 @@ void yespowerLTNCG_hash(const char* input, char* output, uint32_t len)
     };
     yespower_tls( input, 80, &yespower_1_0_ltncg, (yespower_binary_t *)output);
 }
+
+void yespowerLITB_hash(const char* input, char* output, uint32_t len)
+{
+    yespower_params_t yespower_1_0_litb = {
+        .version = YESPOWER_1_0,
+	.N = 2048,
+	.r = 32,
+	.pers = "LITBpower: The number of LITB working or available for proof-of-work mining",
+	.perslen = 73 
+    };
+    yespower_tls( input, len, &yespower_1_0_litb, (yespower_binary_t *)output);
+}
+
